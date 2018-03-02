@@ -2,6 +2,7 @@
 #include <iostream>
 #include <set>
 #include <vector>
+#include <iomanip>
 
 #include <storage/MapBasedGlobalLockImpl.h>
 #include <afina/execute/Get.h>
@@ -51,16 +52,16 @@ TEST(StorageTest, PutIfAbsent) {
 }
 
 TEST(StorageTest, BigTest) {
-    MapBasedGlobalLockImpl storage(100000);
+    MapBasedGlobalLockImpl storage(100000 * 8 * 2);
 
     std::stringstream ss;
 
     for(long i=0; i<100000; ++i)
     {
-        ss << "Key" << i;
+        ss << "Key" << setfill('0') << setw(5) << i;
         std::string key = ss.str();
         ss.str("");
-        ss << "Val" << i;
+        ss << "Val"<< setfill('0') << setw(5)  << i;
         std::string val = ss.str();
         ss.str("");
         storage.Put(key, val);
@@ -68,10 +69,10 @@ TEST(StorageTest, BigTest) {
     
     for(long i=99999; i>=0; --i)
     {
-        ss << "Key" << i;
+        ss << "Key"<< setfill('0') << setw(5)  << i;
         std::string key = ss.str();
         ss.str("");
-        ss << "Val" << i;
+        ss << "Val"<< setfill('0') << setw(5)  << i;
         std::string val = ss.str();
         ss.str("");
         
@@ -84,16 +85,16 @@ TEST(StorageTest, BigTest) {
 }
 
 TEST(StorageTest, MaxTest) {
-    MapBasedGlobalLockImpl storage(1000);
+    MapBasedGlobalLockImpl storage(1000 * 8 * 2);
 
     std::stringstream ss;
 
     for(long i=0; i<1100; ++i)
     {
-        ss << "Key" << i;
+        ss << "Key"<< setfill('0') << setw(5)  << i;
         std::string key = ss.str();
         ss.str("");
-        ss << "Val" << i;
+        ss << "Val"<< setfill('0') << setw(5)  << i;
         std::string val = ss.str();
         ss.str("");
         storage.Put(key, val);
@@ -101,10 +102,10 @@ TEST(StorageTest, MaxTest) {
     
     for(long i=100; i<1100; ++i)
     {
-        ss << "Key" << i;
+        ss << "Key"<< setfill('0') << setw(5)  << i;
         std::string key = ss.str();
         ss.str("");
-        ss << "Val" << i;
+        ss << "Val"<< setfill('0') << setw(5)  << i;
         std::string val = ss.str();
         ss.str("");
         
@@ -116,7 +117,7 @@ TEST(StorageTest, MaxTest) {
     
     for(long i=0; i<100; ++i)
     {
-        ss << "Key" << i;
+        ss << "Key"<< setfill('0') << setw(5)  << i;
         std::string key = ss.str();
         ss.str("");
         
