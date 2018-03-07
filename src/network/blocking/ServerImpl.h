@@ -13,6 +13,7 @@ namespace Afina {
 namespace Network {
 namespace Blocking {
 
+
 /**
  * # Network resource manager implementation
  * Server that is spawning a separate thread for each connection
@@ -35,21 +36,27 @@ protected:
     /**
      * Method is running in the connection acceptor thread
      */
-    void RunAcceptor();
+    void RunAcceptor(int);
 
     /**
      * Methos is running for each connection
      */
-    void RunConnection();
+    void RunConnection(int);
 
+    /**
+     * Methos for close connection
+     */
+    // void CloseConnection(int);
 private:
-    static void *RunAcceptorProxy(void *p);
-
+    template <void (ServerImpl::*function_for_start)(int)>
+    static void *RunThreadProxy(void *p);
+    size_t command_buffer = 128;
+    int server_socket = -1;
     // Atomic flag to notify threads when it is time to stop. Note that
     // flag must be atomic in order to safely publisj changes cross thread
     // bounds
     std::atomic<bool> running;
-
+    
     // Thread that is accepting new connections
     pthread_t accept_thread;
 
@@ -73,6 +80,11 @@ private:
     // Threads that are processing connection data, permits
     // access only from inside of accept_thread
     std::unordered_set<pthread_t> connections;
+};
+
+struct PthreadProxyStruct {
+    ServerImpl *server;
+    int fd;
 };
 
 } // namespace Blocking
