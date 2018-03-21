@@ -2,7 +2,10 @@
 #define AFINA_NETWORK_NONBLOCKING_WORKER_H
 
 #include <memory>
-#include <pthread.h>
+#include <atomic>
+#include <thread>
+#include <unordered_map>
+#include <protocol/Parser.h>
 
 namespace Afina {
 
@@ -20,6 +23,7 @@ namespace NonBlocking {
 class Worker {
 public:
     Worker(std::shared_ptr<Afina::Storage> ps);
+    Worker(Worker && w);
     ~Worker();
 
     /**
@@ -47,10 +51,38 @@ protected:
     /**
      * Method executing by background thread
      */
-    void OnRun(void *args);
+     void OnRun();
+
+    /**
+     * Method add descriptor to epoll in background thread
+     */
+    void EpollAdd(int epoll_fd, int add_fd);
+
+    /**
+     * Method close descriptor and delete some information abaut it
+     */
+    void EpollDelete (int del_fd);
+
+    /**
+     * Method process connection in background thread
+     */
+    void ProcessConnection(int conn_fd);
+
+
+    std::shared_ptr<Afina::Storage> storage;
+    int servsocket = -1;
+    std::atomic_bool Stoped;
+    int EpoolCount = 10;
+
+    std::unordered_map<int, std::string> full_data;
+    std::unordered_map<int, std::string> args;
+    std::unordered_map<int, std::unique_ptr<Execute::Command>> commands;
+    std::unordered_map<int, bool> command_parsed;
+    std::unordered_map<int, unsigned> args_read;
+    std::unordered_map<int, std::unique_ptr<Afina::Protocol::Parser>> parsers;
 
 private:
-    pthread_t thread;
+    std::thread thread;
 };
 
 } // namespace NonBlocking

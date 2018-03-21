@@ -56,8 +56,9 @@ void ServerImpl::Start(uint32_t port, uint16_t n_workers) {
     }
 
     int opts = 1;
-    if (setsockopt(server_socket, SOL_SOCKET, 0, &opts, sizeof(opts)) == -1) {
+    if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEPORT, &opts, sizeof(opts)) == -1) {
         close(server_socket);
+        perror(NULL);
         throw std::runtime_error("Socket setsockopt() failed");
     }
 
