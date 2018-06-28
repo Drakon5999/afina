@@ -140,11 +140,17 @@ public:
 
 
 
+    template <typename... Ta> void *run(void(*func)(Ta...), Ta &&... args){
+        char coroutine_start = 0;
+        _run(&coroutine_start, func, std::forward<Ta>(args)...);
+    }
+
+
     /**
      * Register new coroutine. It won't receive control until scheduled explicitely or implicitly. In case of some
      * errors function returns -1
      */
-    template <typename... Ta> void *run( void (*func)(Ta...), Ta &&... args) {
+    template <typename... Ta> void *_run(char* bottom, void (*func)(Ta...), Ta &&... args) {
         if (this->StackBottom == 0) {
             // Engine wasn't initialized yet
             return nullptr;
@@ -152,6 +158,7 @@ public:
 
         // New coroutine context that carries around all information enough to call function
         context *pc = new context();
+        pc->Low = bottom;
         // Store current state right here, i.e just before enter new coroutine, later, once it gets scheduled
         // execution starts here. Note that we have to acquire stack of the current function call to ensure
         // that function parameters will be passed along

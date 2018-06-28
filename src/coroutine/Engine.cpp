@@ -11,7 +11,7 @@ namespace Coroutine {
 void Engine::Store(context &ctx) {
     char cur_stack_head;
     char * head = &cur_stack_head;
-    ctx.Low = StackBottom;
+    __glibcxx_assert(ctx.Low > head);
     ctx.Hight = head;
 
     char *last_stack = std::get<0>(ctx.Stack);
