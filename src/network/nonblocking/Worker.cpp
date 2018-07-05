@@ -108,6 +108,7 @@ void Worker::OnRun() {
                     EpollAdd(e, client_socket);
                 } else {
                         if ((event.events & EPOLLERR) != 0 || (event.events & EPOLLHUP) != 0) {
+                            std::cout << "Good end!" << std::endl;
                             EpollDelete(event.data.fd);
                         } else {
                             // process client socket
@@ -130,14 +131,15 @@ void Worker::OnRun() {
 
 void Worker::ProcessConnection(int fd){
     std::cout << "network debug: " << __PRETTY_FUNCTION__ << std::endl;
-    // TODO: All connection work is here
-    int tosend = 0;
+    // All connection work is here
+    unsigned long tosend = 0;
     const char *cresult = nullptr;
     std::string result;
     size_t parsed = 0;
+    sleep(10);
     unsigned command_buffer = 4095;
     char data[command_buffer+1];
-    size_t readed;
+    ssize_t readed;
     if(full_data.find(fd) == full_data.end()) {
         command_parsed[fd] = false;
         full_data[fd] = "";
@@ -170,8 +172,9 @@ void Worker::ProcessConnection(int fd){
             if (args_read[fd] != 0) {
                 args_read[fd] += 2;
             }
+        } else {
+            return;
         }
-        return;
     }
 
     if (args_read[fd] != 0) {
@@ -205,7 +208,7 @@ void Worker::ProcessConnection(int fd){
     tosend = result.size();
     cresult = result.c_str();
     while (tosend > 0) {
-        int len_sended;
+        ssize_t len_sended;
         if ((len_sended = send(fd, cresult + (result.size() - tosend), tosend, 0)) < 0) {
             goto end;
         }
@@ -220,7 +223,6 @@ void Worker::ProcessConnection(int fd){
     return;
 end:
     EpollDelete(fd);
-    return;
 }
 
 } // namespace NonBlocking

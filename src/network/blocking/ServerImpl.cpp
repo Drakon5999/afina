@@ -221,7 +221,7 @@ void ServerImpl::RunAcceptor(int) {
 // See Server.h
 void ServerImpl::RunConnection(int fd) {
     std::cout << "network debug: " << __PRETTY_FUNCTION__ << std::endl;
-    // TODO: All connection work is here
+    // All connection work is here
     Afina::Protocol::Parser parser;
     char data[command_buffer+1];
     std::string full_data; 
