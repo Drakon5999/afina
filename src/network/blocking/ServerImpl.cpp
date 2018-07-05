@@ -104,17 +104,14 @@ void ServerImpl::Stop() {
 void ServerImpl::Join() {
     std::cout << "network debug: " << __PRETTY_FUNCTION__ << std::endl;
     pthread_join(accept_thread, 0);
-    while (!connections.empty()) {
-        pthread_t thread;
+    while (true) {
         {
-            std::lock_guard<std::mutex> guard(connections_mutex);
-            auto t = connections.begin();
-            if (t == connections.end()) {
+            std::unique_lock<std::mutex> lk(connections_mutex);
+            connections_cv.wait(lk);
+            if (connections.empty()) {
                 break;
             }
-            thread = *t;
         }
-        pthread_join(thread, NULL);
     }
  
 }
@@ -206,6 +203,9 @@ void ServerImpl::RunAcceptor(int) {
                     throw std::runtime_error("pthread_create() failed");
                 }
                 connections.insert(thread);
+                if (pthread_detach(thread)) {
+                    throw std::runtime_error("pthread_detach() failed");
+                }
             } else {         
                 shutdown(client_socket, SHUT_RDWR);
                 close(client_socket);
@@ -226,7 +226,7 @@ void ServerImpl::RunConnection(int fd) {
     char data[command_buffer+1];
     std::string full_data; 
     while (running.load()) {
-        size_t readed;
+        ssize_t readed;
         if((readed = recv(fd, data, command_buffer, 0)) <= 0 && full_data.size() == 0) {break;}
         data[readed] = '\0';
         full_data.append(data);
@@ -236,7 +236,7 @@ void ServerImpl::RunConnection(int fd) {
             command_parsed = parser.Parse(full_data, parsed);
         } 
         catch (std::exception &e) {
-            std::string err = "Parse error: ";
+            std::string err = "SERVER_ERROR: ";
             err += e.what();
             err += "\r\n";
             if (send(fd, err.data(), err.size(), 0) < 0) {
@@ -304,6 +304,7 @@ void ServerImpl::RunConnection(int fd) {
     
     std::lock_guard<std::mutex> guard(connections_mutex);
     connections.erase(connections.find(pthread_self()));
+    connections_cv.notify_one();
 }
 
 } // namespace Blocking
